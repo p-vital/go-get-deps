@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+import os, os.path, re, subprocess
+
+def extract_deps(path):
+    with open(path) as f:
+        contents = f.read()
+    
+    deps = []
+    match = re.compile(r'import \((.*?)\)', re.S).search(contents)
+    if match:
+        imports = match.group(1)
+        for line in imports.split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+                
+            parts = re.split(r'\s+', line)
+            if len(parts) > 1:
+                dep = parts[1]
+            else:
+                dep = line
+                
+            dep = dep.replace('"', '')
+            first = dep.split('/')[0]
+            if '.' in first:
+                deps.append(dep)
+    
+    return deps
+
+deps = []
+for root, dirs, files in os.walk('.'):
+    for file in files:
+        if file.endswith('.go'):
+            deps.extend(extract_deps(os.path.join(root, file)))
+
+deps_map = {}
+for dep in deps:
+    deps_map[dep] = True
+deps = sorted(deps_map.keys())
+
+if deps:
+    for dep in deps:
+        print('Found %s' % dep)
+    for dep in deps:
+        print('Installing %s' % dep)
+        subprocess.check_call(['go', 'get', dep])
