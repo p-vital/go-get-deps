@@ -44,4 +44,4 @@ if deps:
         print('Found %s' % dep)
     for dep in deps:
         print('Installing %s' % dep)
-        subprocess.check_call(['go', 'get', dep])
+        subprocess.check_call(['go', 'get', '-u', dep])
